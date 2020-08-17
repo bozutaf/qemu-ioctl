@@ -246,7 +246,7 @@ const argtype *thunk_convert(void *dst, const void *src,
 
             assert(*type_ptr < max_struct_entries);
             se = struct_entries + *type_ptr++;
-            if (se->convert[0] != NULL) {
+            if (se->convert[to_host] != NULL) {
                 /* specific conversion is needed */
                 (*se->convert[to_host])(dst, src);
             } else {

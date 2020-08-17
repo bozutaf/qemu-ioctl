@@ -209,6 +209,14 @@
 #ifdef BTRFS_IOC_DEFAULT_SUBVOL
      IOCTL(BTRFS_IOC_DEFAULT_SUBVOL, IOC_W, MK_PTR(TYPE_ULONGLONG))
 #endif
+#ifdef BTRFS_IOC_SNAP_CREATE_V2
+     IOCTL(BTRFS_IOC_SNAP_CREATE_V2, IOC_W,
+           MK_PTR(MK_STRUCT(STRUCT_btrfs_ioctl_vol_args_v2)))
+#endif
+#ifdef BTRFS_IOC_SUBVOL_CREATE_V2
+     IOCTL(BTRFS_IOC_SUBVOL_CREATE_V2, IOC_W,
+           MK_PTR(MK_STRUCT(STRUCT_btrfs_ioctl_vol_args_v2)))
+#endif
 #ifdef BTRFS_IOC_SUBVOL_GETFLAGS
      IOCTL(BTRFS_IOC_SUBVOL_GETFLAGS, IOC_R, MK_PTR(TYPE_ULONGLONG))
 #endif
@@ -281,6 +289,10 @@
      IOCTL(BTRFS_IOC_GET_SUPPORTED_FEATURES, IOC_R,
            MK_PTR(MK_ARRAY(MK_STRUCT(STRUCT_btrfs_ioctl_feature_flags), 3)))
 #endif
+#ifdef BTRFS_IOC_RM_DEV_V2
+     IOCTL(BTRFS_IOC_RM_DEV_V2, IOC_W,
+           MK_PTR(MK_STRUCT(STRUCT_btrfs_ioctl_vol_args_v2)))
+#endif
 #ifdef BTRFS_IOC_LOGICAL_INO_V2
      IOCTL(BTRFS_IOC_LOGICAL_INO_V2, IOC_RW,
            MK_PTR(MK_STRUCT(STRUCT_btrfs_ioctl_logical_ino_args)))
@@ -296,6 +308,10 @@
 #ifdef BTRFS_IOC_INO_LOOKUP_USER
      IOCTL(BTRFS_IOC_INO_LOOKUP_USER, IOC_RW,
            MK_PTR(MK_STRUCT(STRUCT_btrfs_ioctl_ino_lookup_user_args)))
+#endif
+#ifdef BTRFS_IOC_SNAP_DESTROY_V2
+     IOCTL(BTRFS_IOC_SNAP_DESTROY_V2, IOC_W,
+           MK_PTR(MK_STRUCT(STRUCT_btrfs_ioctl_vol_args_v2)))
 #endif
 
 #ifdef CONFIG_USBFS

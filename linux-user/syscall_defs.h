@@ -967,6 +967,26 @@ struct target_rtc_pll_info {
 #define TARGET_FS_IOC32_GETVERSION TARGET_IOR('v', 1, int)
 #define TARGET_FS_IOC32_SETVERSION TARGET_IOW('v', 2, int)
 
+#define TARGET_BTRFS_SUBVOL_NAME_MAX    4039
+
+struct target_btrfs_ioctl_vol_args_v2 {
+    uint64_t fd;
+    uint64_t transid;
+    uint64_t flags;
+    union {
+        struct {
+            uint64_t size;
+            abi_long qgroup_inherit;
+        };
+        uint64_t unused[4];
+    };
+    union {
+        char name[TARGET_BTRFS_SUBVOL_NAME_MAX + 1];
+        uint64_t devid;
+        uint64_t subvolid;
+    };
+};
+
 /* btrfs ioctls */
 #define TARGET_BTRFS_IOC_SNAP_CREATE            TARGET_IOWU(BTRFS_IOCTL_MAGIC, 1)
 #define TARGET_BTRFS_IOC_SCAN_DEV               TARGET_IOWU(BTRFS_IOCTL_MAGIC, 4)
@@ -978,6 +998,10 @@ struct target_rtc_pll_info {
 #define TARGET_BTRFS_IOC_INO_LOOKUP             TARGET_IOWRU(BTRFS_IOCTL_MAGIC, 18)
 #define TARGET_BTRFS_IOC_DEFAULT_SUBVOL         TARGET_IOW(BTRFS_IOCTL_MAGIC, 19,\
                                                            abi_ullong)
+#define TARGET_BTRFS_IOC_SNAP_CREATE_V2         TARGET_IOW(BTRFS_IOCTL_MAGIC, 23,\
+                                            struct target_btrfs_ioctl_vol_args_v2)
+#define TARGET_BTRFS_IOC_SUBVOL_CREATE_V2       TARGET_IOW(BTRFS_IOCTL_MAGIC, 24,\
+                                            struct target_btrfs_ioctl_vol_args_v2)
 #define TARGET_BTRFS_IOC_SUBVOL_GETFLAGS        TARGET_IOR(BTRFS_IOCTL_MAGIC, 25,\
                                                            abi_ullong)
 #define TARGET_BTRFS_IOC_SUBVOL_SETFLAGS        TARGET_IOW(BTRFS_IOCTL_MAGIC, 26,\
@@ -999,10 +1023,14 @@ struct target_rtc_pll_info {
 #define TARGET_BTRFS_IOC_GET_FEATURES           TARGET_IORU(BTRFS_IOCTL_MAGIC, 57)
 #define TARGET_BTRFS_IOC_SET_FEATURES           TARGET_IOWU(BTRFS_IOCTL_MAGIC, 57)
 #define TARGET_BTRFS_IOC_GET_SUPPORTED_FEATURES TARGET_IORU(BTRFS_IOCTL_MAGIC, 57)
+#define TARGET_BTRFS_IOC_RM_DEV_V2              TARGET_IOW(BTRFS_IOCTL_MAGIC, 58,\
+                                            struct target_btrfs_ioctl_vol_args_v2)
 #define TARGET_BTRFS_IOC_LOGICAL_INO_V2         TARGET_IOWRU(BTRFS_IOCTL_MAGIC, 59)
 #define TARGET_BTRFS_IOC_GET_SUBVOL_INFO        TARGET_IORU(BTRFS_IOCTL_MAGIC, 60)
 #define TARGET_BTRFS_IOC_GET_SUBVOL_ROOTREF     TARGET_IOWRU(BTRFS_IOCTL_MAGIC, 61)
 #define TARGET_BTRFS_IOC_INO_LOOKUP_USER        TARGET_IOWRU(BTRFS_IOCTL_MAGIC, 62)
+#define TARGET_BTRFS_IOC_SNAP_DESTROY_V2        TARGET_IOW(BTRFS_IOCTL_MAGIC, 63,\
+                                            struct target_btrfs_ioctl_vol_args_v2)
 
 /* usb ioctls */
 #define TARGET_USBDEVFS_CONTROL TARGET_IOWRU('U', 0)

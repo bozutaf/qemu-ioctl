@@ -5668,6 +5668,83 @@ static const StructEntry struct_termios_def = {
     .print = print_termios,
 };
 
+#if defined(BTRFS_IOC_SUBVOL_CREATE_V2) || defined(BTRFS_IOC_SNAP_CREATE_V2) \
+ || defined(BTRFS_SNAP_DESTROY_V2)      || defined(BTRFS_RM_DEV_V2)
+static void target_to_host_btrfs_ioctl_vol_args_v2(void *dst, const void *src)
+{
+    struct btrfs_ioctl_vol_args_v2 *host_args_v2 = dst;
+    const struct target_btrfs_ioctl_vol_args_v2 *target_args_v2 = src;
+    int device_spec_by_id = 0;
+    int subvol_spec_by_id = 0;
+
+    __get_user(host_args_v2->fd, &target_args_v2->fd);
+    __get_user(host_args_v2->flags, &target_args_v2->flags);
+    __get_user(host_args_v2->transid, &target_args_v2->transid);
+
+    if (host_args_v2->flags & BTRFS_SUBVOL_QGROUP_INHERIT) {
+        struct btrfs_qgroup_inherit *target_inherit;
+        abi_long inherit_addr = tswapal(target_args_v2->qgroup_inherit);
+
+        target_inherit = lock_user(VERIFY_READ, inherit_addr,
+                                   sizeof(*target_inherit), 1);
+
+        host_args_v2->qgroup_inherit = g_new(struct btrfs_qgroup_inherit, 1);
+
+        if (!target_inherit) {
+            host_args_v2->qgroup_inherit = NULL;
+        } else {
+            __get_user(host_args_v2->qgroup_inherit->flags,
+                       &target_inherit->flags);
+            __get_user(host_args_v2->qgroup_inherit->num_qgroups,
+                       &target_inherit->num_qgroups);
+            __get_user(host_args_v2->qgroup_inherit->num_ref_copies,
+                       &target_inherit->num_ref_copies);
+            __get_user(host_args_v2->qgroup_inherit->num_excl_copies,
+                       &target_inherit->num_excl_copies);
+            __get_user(host_args_v2->qgroup_inherit->lim.flags,
+                       &target_inherit->lim.flags);
+            __get_user(host_args_v2->qgroup_inherit->lim.max_rfer,
+                       &target_inherit->lim.max_rfer);
+            __get_user(host_args_v2->qgroup_inherit->lim.max_excl,
+                       &target_inherit->lim.max_excl);
+            __get_user(host_args_v2->qgroup_inherit->lim.rsv_rfer,
+                       &target_inherit->lim.rsv_rfer);
+            __get_user(host_args_v2->qgroup_inherit->lim.rsv_excl,
+                       &target_inherit->lim.rsv_excl);
+        }
+
+        unlock_user(target_inherit, inherit_addr, 0);
+    }
+
+#ifdef BTRFS_DEVICE_SPEC_BY_ID
+    if (host_args_v2->flags & BTRFS_DEVICE_SPEC_BY_ID) {
+        __get_user(host_args_v2->devid, &target_args_v2->devid);
+        device_spec_by_id = 1;
+    }
+#endif
+#ifdef BTRFS_SUBVOL_SPEC_BY_ID
+    if (host_args_v2->flags & BTRFS_SUBVOL_SPEC_BY_ID) {
+        __get_user(host_args_v2->subvolid, &target_args_v2->subvolid);
+        subvol_spec_by_id = 1;
+    }
+#endif
+
+    if (!device_spec_by_id & !subvol_spec_by_id) {
+        memcpy(host_args_v2->name, target_args_v2->name,
+               BTRFS_SUBVOL_NAME_MAX + 1);
+    }
+}
+
+static const StructEntry struct_btrfs_ioctl_vol_args_v2_def = {
+    .convert = { NULL, target_to_host_btrfs_ioctl_vol_args_v2},
+    .print = print_btrfs_ioctl_vol_args_v2,
+    .align = { __alignof__(struct target_btrfs_ioctl_vol_args_v2),
+               __alignof__(struct btrfs_ioctl_vol_args_v2) },
+    .size = { sizeof(struct target_btrfs_ioctl_vol_args_v2),
+              sizeof(struct btrfs_ioctl_vol_args_v2) },
+};
+#endif
+
 static bitmask_transtbl mmap_flags_tbl[] = {
     { TARGET_MAP_SHARED, TARGET_MAP_SHARED, MAP_SHARED, MAP_SHARED },
     { TARGET_MAP_PRIVATE, TARGET_MAP_PRIVATE, MAP_PRIVATE, MAP_PRIVATE },

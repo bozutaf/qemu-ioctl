@@ -9,6 +9,9 @@
 #include <netinet/tcp.h>
 #include <linux/if_packet.h>
 #include <linux/netlink.h>
+#ifdef CONFIG_BTRFS
+#include <linux/btrfs.h>
+#endif
 #include <sched.h>
 #include "qemu.h"
 
@@ -1434,6 +1437,22 @@ UNUSED static struct enums itimer_types[] = {
     ENUM_END,
 };
 
+UNUSED static struct flags btrfs_args_vol_v2_flags[] = {
+#ifdef BTRFS_SUBVOL_RDONLY
+    FLAG_GENERIC(BTRFS_SUBVOL_RDONLY),
+#endif
+#ifdef BTRFS_SUBVOL_QGROUP_INHERIT
+    FLAG_GENERIC(BTRFS_SUBVOL_QGROUP_INHERIT),
+#endif
+#ifdef BTRFS_DEVICE_SPEC_BY_ID
+    FLAG_GENERIC(BTRFS_DEVICE_SPEC_BY_ID),
+#endif
+#ifdef BTRFS_SUBVOL_SPEC_BY_ID
+    FLAG_GENERIC(BTRFS_SUBVOL_SPEC_BY_ID),
+#endif
+    FLAG_END,
+};
+
 /*
  * print_xxx utility functions.  These are used to print syscall
  * parameters in certain format.  All of these have parameter
@@ -1773,6 +1792,82 @@ print_termios(void *arg)
 
     qemu_log("}");
 }
+
+#if defined(BTRFS_IOC_SUBVOL_CREATE_V2) || defined(BTRFS_IOC_SNAP_CREATE_V2) \
+ || defined(BTRFS_IOC_SNAP_DESTROY_V2)  || defined(BTRFS_IOC_RM_DEV_V2)
+void
+print_btrfs_ioctl_vol_args_v2(void *arg)
+{
+    struct target_btrfs_ioctl_vol_args_v2 *target_args_v2 = arg;
+    uint64_t flags = tswap64(target_args_v2->flags);
+    int device_spec_by_id = 0;
+    int subvol_spec_by_id = 0;
+
+    qemu_log("{fd = %" PRId64 ", flags = ", tswap64(target_args_v2->fd));
+    print_flags(btrfs_args_vol_v2_flags, flags, 0);
+    qemu_log(" transid = %" PRIu64 ",", tswap64(target_args_v2->transid));
+
+#ifdef BTRFS_SUBVOL_QGROUP_INHERIT
+    if (flags & BTRFS_SUBVOL_QGROUP_INHERIT) {
+
+        struct btrfs_qgroup_inherit *target_inherit;
+        abi_long inherit_addr = tswapal(target_args_v2->qgroup_inherit);
+
+        target_inherit = lock_user(VERIFY_READ, inherit_addr,
+                                   sizeof(*target_inherit), 1);
+
+        if (target_inherit) {
+            qemu_log(" size = %" PRIu64,
+                     tswap64(target_args_v2->size));
+            qemu_log(", qgroup_inherit = {");
+
+            qemu_log("flags = %" PRIu64,
+                     tswap64(target_inherit->flags));
+            qemu_log(", num_qgroups = %" PRIu64,
+                     tswap64(target_inherit->num_qgroups));
+            qemu_log(", num_ref_copies = %" PRIu64,
+                     tswap64(target_inherit->num_ref_copies));
+            qemu_log(", num_excl_copies = %" PRIu64,
+                     tswap64(target_inherit->num_excl_copies));
+
+            qemu_log(", lim = {");
+            qemu_log("lim.flags = %" PRIu64,
+                     tswap64(target_inherit->lim.flags));
+            qemu_log(", lim.max_rfer = %" PRIu64,
+                     tswap64(target_inherit->lim.max_rfer));
+            qemu_log(", lim.max_excl = %" PRIu64,
+                     tswap64(target_inherit->lim.max_excl));
+            qemu_log(", lim.rsv_rfer = %" PRIu64,
+                     tswap64(target_inherit->lim.rsv_rfer));
+            qemu_log(", lim.rsv_excl = %" PRIu64 "}",
+                     tswap64(target_inherit->lim.rsv_excl));
+
+            qemu_log(", ...}, ");
+        }
+
+        unlock_user(target_inherit, inherit_addr, 0);
+    }
+#endif
+
+#ifdef BTRFS_DEVICE_SPEC_BY_ID
+    if (flags & BTRFS_DEVICE_SPEC_BY_ID) {
+        qemu_log(" devid = %" PRIu64, tswap64(target_args_v2->devid));
+        device_spec_by_id = 1;
+    }
+#endif
+#ifdef BTRFS_SUBVOL_SPEC_BY_ID
+    if (flags & BTRFS_SUBVOL_SPEC_BY_ID) {
+        qemu_log(" subvolid = %" PRIu64, tswap64(target_args_v2->subvolid));
+        subvol_spec_by_id = 1;
+    }
+#endif
+    if (!device_spec_by_id && !subvol_spec_by_id) {
+        qemu_log(" name = \"%s\"", target_args_v2->name);
+    }
+
+    qemu_log("}");
+}
+#endif
 
 #undef UNUSED
 

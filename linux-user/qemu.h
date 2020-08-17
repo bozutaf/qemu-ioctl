@@ -708,6 +708,11 @@ static inline uint64_t target_offset64(uint64_t word0, uint64_t word1)
 
 void print_termios(void *arg);
 
+#if defined(BTRFS_IOC_SUBVOL_CREATE_V2) || defined(BTRFS_IOC_SNAP_CREATE_V2) \
+ || defined(BTRFS_IOC_SNAP_DESTROY_V2)  || defined(BTRFS_IOC_RM_DEV_V2)
+void print_btrfs_ioctl_vol_args_v2(void *arg);
+#endif
+
 /* ARM EABI and MIPS expect 64bit types aligned even on pairs or registers */
 #ifdef TARGET_ARM
 static inline int regpairs_aligned(void *cpu_env, int num)

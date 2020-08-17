@@ -358,6 +358,11 @@ STRUCT(btrfs_ioctl_vol_args,
        TYPE_LONGLONG, /* fd */
        MK_ARRAY(TYPE_CHAR, BTRFS_PATH_NAME_MAX + 1)) /* name */
 
+#if defined(BTRFS_IOC_SUBVOL_CREATE_V2) || defined(BTRFS_IOC_SNAP_CREATE_V2) \
+ || defined(BTRFS_IOC_SNAP_DESTROY_V2)  || defined(BTRFS_IOC_RM_DEV_V2)
+STRUCT_SPECIAL(btrfs_ioctl_vol_args_v2)
+#endif
+
 STRUCT(btrfs_ioctl_timespec,
        TYPE_ULONGLONG, /* sec */
        TYPE_INT) /* nsec */
